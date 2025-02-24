@@ -1,31 +1,50 @@
-const http = require('http');
+// const http = require('http');
 const fs = require('fs');
 // const fs = require('fs').promises;
+const path = require('path');
+require("dotenv").config();
+const express = require("express");
+const app = express();
 
-http.createServer(function (req, res) {
-    let filename = "." + req.url;
-    if (req.url === '/') {
-      filename = './index.html';
+app.get("/:filename?", function (req, res) {
+  const filename = req.params.filename || 'index'; // default to 'index' if no filename is provided
+  const filePath = path.resolve(`${filename}.html`) // prevents directory traversal attacks
+  fs.readFile(filePath, function (err, data) {
+    if (err) {
+      res.writeHead(404, {'Content-Type': 'text/html'});
+      return fs.readFile('./404.html', (err, d) =>res.end(d));
     }
-    fs.readFile(filename , function (err, data) {
-      if (err) {
-        res.writeHead(404, {'Content-Type': 'text/html'});
-        return fs.readFile('./404.html', (err, d) =>res.end(d));
-      }
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write(data);
-      return res.end();
-    });
-}).listen(8080);
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    return res.end(data);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () =>{console.log(`Listening on port ${PORT}`)});
+
+// http.createServer(function (req, res) {
+//     let filename = "." + req.url;
+//     if (req.url === '/') {
+//       filename = './index';
+//     }
+//     fs.readFile(filename + '.html' , function (err, data) {
+//       if (err) {
+//         res.writeHead(404, {'Content-Type': 'text/html'});
+//         return fs.readFile('./404.html', (err, d) =>res.end(d));
+//       }
+//       res.writeHead(200, {'Content-Type': 'text/html'});
+//       return res.end(data);
+//     });
+// }).listen(8080);
 
 // http.createServer(async function (req, res) {
 //   let filename = "." + req.url;
 //   if (req.url === '/') {
-//     filename = './index.html';
+//     filename = './index';
 //   }
 //   try {
 //     // Step 1: Try to read the requested file
-//     const data = await fs.readFile(filename);
+//     const data = await fs.readFile(filename + '.html');
 //     //Step 2: File exists, send 200 OK
 //     res.writeHead(200, {'Content-Type':'text/html'});
 //     res.end(data);
